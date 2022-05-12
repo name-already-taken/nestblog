@@ -1,15 +1,17 @@
 type User {
-  # Example field (placeholder)
   uuid: ID!
   userName: String!
   password: String!
+  salt: String!
+  email: String
   createDate: String!
   lastUpdate: String!
 }
 
 input CreateUserInput {
-  # Example field (placeholder)
-  exampleField: Int
+  userName: String!
+  password: String!
+  email: String
 }
 
 input UpdateUserInput {
@@ -18,11 +20,11 @@ input UpdateUserInput {
 
 type Query {
   users: [User]!
-  user(id: Int!): User
+  user(uuid: Int!): User
 }
 
 type Mutation {
   createUser(createUserInput: CreateUserInput!): User!
   updateUser(updateUserInput: UpdateUserInput!): User!
-  removeUser(id: Int!): User
+  removeUser(uuid: ID!): User
 }

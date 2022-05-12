@@ -11,6 +11,12 @@ export class User {
     @Column()
     password: string;
 
+    @Column()
+    salt: string;
+
+    @Column({default: ""})
+    email: string;
+
     @CreateDateColumn()
     createDate: Date;
 
