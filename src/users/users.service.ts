@@ -5,6 +5,9 @@ import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
 import { User } from './entities/user.entity';
 
+let md5 = require('md5');
+var _ = require('lodash');
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -21,11 +24,10 @@ export class UsersService {
     try {
       user.userName = createUserInput.userName;
       // create salt and password
-      let md5 = require("md5");
       let salt = md5(new Date());
       user.salt = salt;
       let hashedpwd = md5(createUserInput.password);
-      let password = hashedpwd + salt;
+      let password = this.calculatePassword(hashedpwd, salt);
       user.password = password;
       if (createUserInput.email) {
         user.email = createUserInput.email;
@@ -49,8 +51,34 @@ export class UsersService {
     return await this.userRepository.findOne(uuid);
   }
 
-  update(id: number, updateUserInput: UpdateUserInput) {
-    return `This action updates a #${id} user`;
+  async update(uuid: string, updateUserInput: UpdateUserInput) {
+    var user = await this.findOne(uuid);
+    let dict = {};
+    for (let k in updateUserInput) {
+      if (k == 'password') {
+        let temp = this.calculatePassword(md5(updateUserInput[k]), user.salt);
+        if (temp != user.password) {
+          dict[k] = temp;
+        }
+      } else if (updateUserInput[k] != user[k]) {
+        dict[k] = updateUserInput[k];
+      }
+    }
+    if (!_.size(dict)) {
+      // means no change
+      return user;
+    }
+    if (user) {
+      // update it
+      let result = await this.connection
+        .createQueryBuilder()
+        .update(User)
+        .set(dict)
+        .where('uuid = :uuid', { uuid: uuid })
+        .execute();
+    }
+    user = await this.findOne(uuid);
+    return user;
   }
 
   async remove(uuid: string) {
@@ -65,5 +93,15 @@ export class UsersService {
         .execute();
     }
     return user;
+  }
+
+  calculatePassword(password, salt) {
+    let ret = '';
+    for (let index in password) {
+      ret += (
+        parseInt(password[index], 16) ^ parseInt(salt[index], 16)
+      ).toString(16);
+    }
+    return ret;
   }
 }

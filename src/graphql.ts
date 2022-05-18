@@ -14,7 +14,10 @@ export interface CreateUserInput {
 }
 
 export interface UpdateUserInput {
-    id: number;
+    uuid: string;
+    userName?: Nullable<string>;
+    email?: Nullable<string>;
+    password?: Nullable<string>;
 }
 
 export interface User {
